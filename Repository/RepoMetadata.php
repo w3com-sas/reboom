@@ -76,10 +76,10 @@ class RepoMetadata
         BoomManager $manager,
         string $read,
         string $write,
-        string $key = null,
-        string $aliasRead = null,
-        string $aliasWrite = null,
-        string $aliasSearch = null,
+        ?string $key = null,
+        ?string $aliasRead = null,
+        ?string $aliasWrite = null,
+        ?string $aliasSearch = null,
         array $columns
     ) {
         $this->entityName = $entityName;

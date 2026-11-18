@@ -36,7 +36,7 @@ class ClassCreator
         $className = $entity->getAlias() ? $entity->getAlias() : $entity->getName();
         $class = $namespace->addClass($className);
         $class
-            ->addExtend(AbstractEntity::class);
+            ->setExtends(AbstractEntity::class);
 
         if ($type !== 'ods') {
             $entity = $this->generator->getSLInspector()->addMetaToEntity($entity);
@@ -187,7 +187,7 @@ class ClassCreator
 
         $class = $namespace->addClass($name);
         $class
-            ->addExtend(AbstractEntity::class);
+            ->setExtends(AbstractEntity::class);
 
         $class->addComment($baseClass->getComment());
         $class->setAttributes($baseClass->getAttributes());

@@ -136,7 +136,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @return array
      * @throws \Exception
      */
-    public function findAll(Parameters $params = null)
+    public function findAll(?Parameters $params = null)
     {
         $caseInsensitive = false;
         if (isset($params)){
@@ -193,7 +193,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @return mixed
      * @throws \Exception
      */
-    public function count(Parameters $params = null)
+    public function count(?Parameters $params = null)
     {
         if (BoomConstants::SL == $this->read) {
             $uri = $this->aliasRead;
@@ -220,7 +220,7 @@ abstract class AbstractRepository implements RepositoryInterface
         return $res;
     }
 
-    public function search(Parameters $params = null)
+    public function search(?Parameters $params = null)
     {
         $uri = $this->aliasSearch . $params->getIPFilter() . '/Results';
         $uri .= $params->setFormat('json')->getParameters(false);
@@ -394,7 +394,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @return array
      * @throws \Exception
      */
-    public function getDataToSend(array $updateFields, AbstractEntity $entity, AbstractRepository $repository = null)
+    public function getDataToSend(array $updateFields, AbstractEntity $entity, ?AbstractRepository $repository = null)
     {
         $repository = $repository === null ? $this : $repository;
         $data = [];

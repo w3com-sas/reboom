@@ -42,7 +42,7 @@ Also add the dependency :
 ```json
 {
 "require": {
-        "w3com-sas/boom": "^1.0"
+        "w3com-sas/reboom": "^1.0"
     }
 }
 ```

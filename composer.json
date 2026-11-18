@@ -1,5 +1,5 @@
 {
-  "name": "w3com-sas/boom",
+  "name": "w3com-sas/reboom",
   "description": "Business One Object Manager",
   "type": "symfony-bundle",
   "minimum-stability": "stable",

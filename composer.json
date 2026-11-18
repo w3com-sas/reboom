@@ -31,7 +31,7 @@
   ],
   "require": {
     "php": ">=8.2",
-    "doctrine/annotations": "^1.14",
+    "doctrine/annotations": "^1.14 || ^2.0",
     "guzzlehttp/guzzle": "^7.0",
     "nette/php-generator": "^4.2",
     "psr/log": "^3.0",

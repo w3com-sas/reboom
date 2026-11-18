@@ -30,6 +30,7 @@ use W3com\BoomBundle\Repository\RepoMetadata;
 use W3com\BoomBundle\RestClient\OdataRestClient;
 use W3com\BoomBundle\RestClient\SLRestClient;
 use W3com\BoomBundle\Utils\StringUtils;
+use W3com\BoomBundle\Utils\RawRequest;
 
 class BoomManager
 {
@@ -292,7 +293,7 @@ class BoomManager
         if ($stop instanceof StopwatchEvent) {
             $data['duration'] = $stop->getDuration();
         }
-        $decoded = !is_array($response) ? json_decode($response) : $response;
+        $decoded = is_string($response) ? json_decode($response) : $response;
         if (is_object($decoded) || is_array($response)) {
             $data['decoded'] = $decoded;
         }
@@ -817,6 +818,58 @@ class BoomManager
         } catch(\Exception $e){
             throw new \Exception('Erreur getLight : '.$e->getMessage());
         }
+    }
+
+    /** Execute a raw Service Layer GET and populate the supplied request. */
+    public function rawRequestNew(RawRequest $rawRequestNew): void
+    {
+        $uri = $rawRequestNew->getRequest();
+        $maxAttempts = $this->config['service_layer']['max_login_attempts'];
+        for ($attempt = 1; $attempt <= $maxAttempts; ++$attempt) {
+            try {
+                $this->stopwatch->start('SL-rawRequestCallbackNew');
+                try {
+                    $response = $this->getCurrentSLClient()->request('GET', $uri, [
+                        'headers' => [
+                            'Prefer' => 'odata.maxpagesize=10000',
+                            'cache-control' => 'no-cache',
+                        ],
+                    ]);
+                } finally {
+                    $stop = $this->stopwatch->stop('SL-rawRequestCallbackNew');
+                }
+                $body = $response->getBody()->getContents();
+                $this->addToCollectedData('sl', $response->getStatusCode(), $uri, null, $body, $stop);
+                $rawRequestNew->handleResponse($body);
+                return;
+            } catch (ClientException $e) {
+                $this->addToCollectedData('sl', $e->getCode(), $uri, null, null, $stop);
+                if ($e->getCode() === 404) {
+                    $rawRequestNew->handleResponse(null);
+                    return;
+                }
+                $expiredCookie = $e->getCode() === 400 && strpos($e->getMessage(), '-304') !== false;
+                if (($e->getCode() === 401 || $expiredCookie) && $attempt < $maxAttempts) {
+                    if ($expiredCookie) {
+                        $this->logger->error('Remove cookie file');
+                        $this->removeLastCookieFile();
+                    }
+                    $this->restClients['sl']->login();
+                    continue;
+                }
+                throw $e;
+            } catch (ConnectException $e) {
+                $this->logger->error('ConnectException : (' . $e->getCode() . ') - ' . $e->getMessage());
+                throw new \RuntimeException('Connection error, check if config is OK, or maybe some needed VPN in on.', 0, $e);
+            } catch (\Exception $e) {
+                if ($e->getCode() == 502 && $attempt < $maxAttempts) {
+                    $this->restClients['sl']->login();
+                    continue;
+                }
+                throw $e;
+            }
+        }
+        throw new \RuntimeException('No Service Layer request attempted: max_login_attempts must be at least 1.');
     }
 
     /**

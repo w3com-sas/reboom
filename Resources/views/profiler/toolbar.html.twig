@@ -1,0 +1,199 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+
+
+{% block toolbar %}
+    {% set icon %}
+        {# this is the content displayed as a panel in the toolbar #}
+        <span class="icon">
+            <svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+                 viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
+                <style type="text/css">
+                    .st0 {
+                        fill: none;
+                        stroke: #AAAAAA;
+                        stroke-miterlimit: 10;
+                    }
+
+                    .st1 {
+                        fill: #AAAAAA;
+                    }
+                </style>
+                <path id="XMLID_1_" class="st0"
+                      d="M16.3,5.5c-0.4-1-0.2-1.6,0-1.8c0.3-0.5,0.9-0.4,1.5-1c0.4-0.4,0.5-0.9,0.5-1.2"/>
+                <path id="XMLID_7_" class="st1" d="M18,9.4l1.6-3.2L13.1,3l-1.6,3.2c-3,0-5.9,1.7-7.3,4.6c-2,4.1-0.3,9,3.8,10.9s9,0.3,10.9-3.8
+                    C20.3,15.1,19.8,11.7,18,9.4z M7.2,12.2c-0.9,2.1,0.2,4.1,0.3,4.3l-1.7,1C5.5,17,4,14.3,5.4,11.4c1-2.3,3.4-3.8,5.9-3.9l0.1,2
+                    C9.5,9.5,7.9,10.6,7.2,12.2z"/>
+            </svg>
+        </span>
+        <span class="sf-toolbar-value">{{ collector.data|length }}</span>
+    {% endset %}
+
+    {% set text %}
+        {% set sommeDuration = 0 %}
+        {% for line in collector.data %}
+            {% set sommeDuration = sommeDuration+ line.duration %}
+        {% endfor %}
+        <div class="sf-toolbar-info-piece">
+            <b>Total queries : {{ collector.data|length }}</b>
+            <span></span>
+        </div>
+
+
+        <div class="sf-toolbar-info-piece">
+            <b>Total duration : {{ sommeDuration }} ms </b>
+            <span></span>
+        </div>
+
+    {% endset %}
+
+    {# the 'link' value set to 'false' means that this panel doesn't
+       show a section in the web profiler #}
+    {% if collector.hasErrors %}
+        {% set status = 'red' %}
+    {% else %}
+        {% set status = 'normal' %}
+    {% endif %}
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', { link: true, status: status }) }}
+{% endblock %}
+
+{% block head %}
+    {{ parent() }}
+    <style>
+        .no-word-break {
+            word-break: normal;
+            hyphens: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block menu %}
+    {# This left-hand menu appears when using the full-screen profiler. #}
+    <span class="label {% if collector.hasErrors %} label-status-error{% endif %}">
+        <span class="icon">
+            <svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+                 viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
+                <style type="text/css">
+                    .st0 {
+                        fill: none;
+                        stroke: #AAAAAA;
+                        stroke-miterlimit: 10;
+                    }
+
+                    .st1 {
+                        fill: #AAAAAA;
+                    }
+                </style>
+                <path id="XMLID_1_" class="st0"
+                      d="M16.3,5.5c-0.4-1-0.2-1.6,0-1.8c0.3-0.5,0.9-0.4,1.5-1c0.4-0.4,0.5-0.9,0.5-1.2"/>
+                <path id="XMLID_7_" class="st1" d="M18,9.4l1.6-3.2L13.1,3l-1.6,3.2c-3,0-5.9,1.7-7.3,4.6c-2,4.1-0.3,9,3.8,10.9s9,0.3,10.9-3.8
+                    C20.3,15.1,19.8,11.7,18,9.4z M7.2,12.2c-0.9,2.1,0.2,4.1,0.3,4.3l-1.7,1C5.5,17,4,14.3,5.4,11.4c1-2.3,3.4-3.8,5.9-3.9l0.1,2
+                    C9.5,9.5,7.9,10.6,7.2,12.2z"/>
+            </svg>
+        </span>
+        <strong>BOOM</strong>
+        {% if collector.hasErrors %}
+            <span class="count"><span>{{ collector.countErrors }}</span></span>
+        {% endif %}
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <h2>Hana Requests</h2>
+    {% if collector.data|length == 0 %}
+        <p><em>No requests profiled.</em></p>
+    {% else %}
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Request</th>
+                <th>Response</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% set sommeDuration = 0 %}
+            {% for line in collector.data %}
+            {% set sommeDuration = sommeDuration+ line.duration %}
+            <tr {% if line.code != 200 %}class="status-error"{% endif %}>
+                <td style="border-bottom: none">{{ loop.index }}</td>
+                <td class="font-normal no-word-break" style="border-bottom: none">
+
+                    <span class="no-word-break"><strong>{{ line.type }} : </strong>{{ line.uri }}</span>
+                    {% if line.duration is defined %}
+                        <span class="newline"><strong>Render time : </strong> {{ line.duration }} ms</span>
+                    {% endif %}
+                    {% if line.parameters is defined %}
+                        <small>
+                            <ul>
+                                {% for param,value in line.parameters %}
+                                    <li style="margin-bottom: 0">{{ param }}
+                                        : {{ dump(value) }}</li>
+                                {% endfor %}
+                            </ul>
+                        </small>
+                        {% if line.parameters is not null %}
+                            <smalll>
+                                {{ line.parameters|json_encode() }}
+                            </smalll>
+                        {% endif %}
+                    {% endif %}
+                </td>
+
+                <td style="border-bottom: none">
+                    <a id="btn-in-{{ loop.index }}" class="btn btn-sm" style="display: block;"
+                       onclick="showResponse({{ loop.index }})">Show response</a>
+                    <a id="btn-out-{{ loop.index }}" class="btn btn-sm"
+                       onclick="hideResponse({{ loop.index }})" style="display: none;">Hide Response</a>
+                </td>
+            </tr>
+            <tr {% if line.code != 200 %}class="status-error"{% endif %}>
+                <td colspan="3" style="border-top: none">
+                    <div id="response-content-{{ loop.index }}" style="display:none;">
+                        <hr style="border: 0; height: 0; border-top: 1px solid rgba(0, 0, 0, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.3);">
+                        {% if line.decoded is defined %}
+                            {{ dump(line.decoded) }}
+                            <br /><pre class="sf-dump"><span class="sf-dump-str">JSON</span></pre>
+                            <p style="overflow-wrap: anywhere;font-size: 12px">{{ line.decoded|json_encode() }}</p>
+                        {% else %}
+                            {{ line.response }}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+
+            {% endfor %}
+
+            <div class="metrics">
+                <div class="metric">
+                    <span class="value">{{ collector.data|length }}</span>
+                    <span class="label">Data Queries</span>
+                </div>
+                <div class="metric">
+                    <span class="value"> {{ sommeDuration }}
+                        <small>ms</small></span>
+                    <span class="label">Total duration </span>
+                </div>
+            </div>
+
+            <script>
+                function showResponse(index) {
+                    document.getElementById('response-content-' + index).style.display = 'block';
+                    document.getElementById('btn-out-' + index).style.display = 'block';
+                    document.getElementById('btn-in-' + index).style.display = 'none';
+
+                }
+
+                function hideResponse(findex) {
+                    document.getElementById('response-content-' + findex).style.display = 'none';
+                    document.getElementById('btn-out-' + findex).style.display = 'none';
+                    document.getElementById('btn-in-' + findex).style.display = 'block';
+
+                }
+            </script>
+
+        </table>
+    {% endif %}
+{% endblock %}

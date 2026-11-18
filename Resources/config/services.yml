@@ -1,0 +1,105 @@
+services:
+  W3com\BoomBundle\Service\BoomManager:
+    arguments:
+      - '%boom.config%'
+      - '@logger'
+      - '@W3com\BoomBundle\stopwatch'
+      - '@Symfony\Component\HttpFoundation\RequestStack'
+      - '@Symfony\Component\EventDispatcher\EventDispatcherInterface'
+    tags:
+      - { name: monolog.logger.generator, channel: hana }
+    public: true
+
+  W3com\BoomBundle\Service\HanaConfigManager:
+    arguments:
+      - '@W3com\BoomBundle\Service\BoomManager'
+    public: true
+
+  W3com\BoomBundle\DataCollector\HanaDataCollector:
+    arguments:
+      - '@W3com\BoomBundle\Service\BoomManager'
+    tags:
+      - { name: data_collector, template: '@W3comBoom/profiler/toolbar.html.twig', id: 'boom.hana_collector'}
+    public: true
+
+  W3com\BoomBundle\Generator\AppInspector:
+    arguments:
+      - '@W3com\BoomBundle\Service\BoomManager'
+    public: true
+
+  W3com\BoomBundle\Service\BoomGenerator:
+    arguments:
+      - '@W3com\BoomBundle\Service\BoomManager'
+      - '@W3com\BoomBundle\Generator\AppInspector'
+    public: true
+
+  W3com\BoomBundle\Command\MakeSLEntityCommand:
+    arguments:
+    - '@W3com\BoomBundle\Service\BoomGenerator'
+    tags:
+    - { name: 'console.command', command: 'boom:make:sl-entity' }
+
+  W3com\BoomBundle\Command\MakeODSEntityCommand:
+    arguments:
+    - '@W3com\BoomBundle\Service\BoomGenerator'
+    tags:
+    - { name: 'console.command', command: 'boom:make:ods-entity' }
+
+  W3com\BoomBundle\Command\SynchronizeCommand:
+    arguments:
+    - '@W3com\BoomBundle\Service\BoomGenerator'
+    - '@W3com\BoomBundle\Service\BoomManager'
+    tags:
+    - { name: 'console.command', command: 'boom:synchronize' }
+
+  W3com\BoomBundle\Command\CreateUDTCommand:
+    arguments:
+    - '@W3com\BoomBundle\Service\BoomManager'
+    - '@W3com\BoomBundle\Service\BoomGenerator'
+    tags:
+    - { name: 'console.command', command: 'boom:make:udt' }
+
+  W3com\BoomBundle\Command\ConvertAnnotationsCommand:
+    arguments:
+      - '%boom.config%'
+    tags:
+      - { name: 'console.command', command: 'boom:convert:annotations' }
+
+  W3com\BoomBundle\Command\ClearCacheCommand:
+    arguments:
+      - '@Symfony\Component\HttpKernel\KernelInterface'
+    tags:
+    - { name: 'console.command', command: 'boom:clear' }
+
+  W3com\BoomBundle\Form\BoomTypeGuesser:
+    tags:
+      - {name: 'form.type_guesser'}
+
+  W3com\BoomBundle\Form\DataTransformer\SapDateTransformer:
+    tags:
+      - {name: 'form.type'}
+
+  W3com\BoomBundle\Form\DataTransformer\SapTimeTransformer:
+    tags:
+      - {name: 'form.type'}
+
+  W3com\BoomBundle\Form\Type\SapDateType:
+    arguments:
+      - '@W3com\BoomBundle\Form\DataTransformer\SapDateTransformer'
+    tags:
+      - {name: 'form.type'}
+
+  W3com\BoomBundle\Form\Type\SapTimeType:
+    arguments:
+      - '@W3com\BoomBundle\Form\DataTransformer\SapTimeTransformer'
+    tags:
+      - {name: 'form.type'}
+
+  W3com\BoomBundle\Form\Type\HanaEntityChoiceType:
+    arguments:
+      - '@W3com\BoomBundle\Service\BoomManager'
+    tags:
+      - {name: 'form.type'}
+
+  W3com\BoomBundle\stopwatch:
+    class: Symfony\Component\Stopwatch\Stopwatch

@@ -65,7 +65,7 @@ class BoomManager
     public $stopwatch;
 
     /** @var array */
-    private $collectedData;
+    private $collectedData = [];
 
     /** @var bool */
     private $inSlContextMode = false;

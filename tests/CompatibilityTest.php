@@ -98,6 +98,24 @@ final class CompatibilityTest extends TestCase
         }
     }
 
+    public function testCollectorHandlesRequestsWithAndWithoutSapActivity(): void
+    {
+        $manager = (new ReflectionClass(BoomManager::class))->newInstanceWithoutConstructor();
+        $collector = new \W3com\BoomBundle\DataCollector\HanaDataCollector($manager);
+        $request = new \Symfony\Component\HttpFoundation\Request();
+        $response = new \Symfony\Component\HttpFoundation\Response();
+
+        $collector->collect($request, $response);
+        self::assertSame([], $collector->getData());
+        self::assertSame(0, $collector->countErrors());
+
+        $manager->addToCollectedData('SL', 500, '/Items', [], '{}');
+        $collector->collect($request, $response);
+        self::assertCount(1, $collector->getData());
+        self::assertSame('/Items', $collector->getData()[0]['uri']);
+        self::assertSame(1, $collector->countErrors());
+    }
+
     public function testServiceLayerRequest(): void
     {
         $handler = new \GuzzleHttp\Handler\MockHandler([new \GuzzleHttp\Psr7\Response(200, [], '{"value":[{"Code":"A"}]}')]);
